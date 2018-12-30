@@ -330,9 +330,23 @@ class ResNet(nn.Module):
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
 
+
+        print(x2.size(),x3.size(),x4.size())
+
+
         features = self.fpn([x2, x3, x4])
 
-        attention = [self.levelattentionModel(feature) for feature in features]
+        attention=[]
+        for feature in features:
+            print(feature.size())
+
+            atten=self.levelattentionModel(feature)
+            print('atten',atten.size())
+            attention.append(atten)
+
+        if not self.training:
+            return x2.size(), x3.size(), x4.size()
+        # attention = [self.levelattentionModel(feature) ]
 
         # i = 1
         # for level in attention:
@@ -419,3 +433,14 @@ def resnet152(num_classes, **kwargs):
     """
     model = ResNet(num_classes, Bottleneck, [3, 8, 36, 3], **kwargs)
     return model
+
+if __name__ == '__main__':
+    net= resnet50(num_classes=2)
+    net=net.cuda()
+    net.training=False
+    for i in range(4):
+        input = torch.FloatTensor(2, 3, 255, 255).cuda()
+        start=time.time()
+        x = net(input)
+
+        print(x, time.time() - start)
